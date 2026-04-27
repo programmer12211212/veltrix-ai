@@ -1,0 +1,77 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Veltrix AI - Sun'iy Intellekt Yordamchi</title>
+    <meta name="description" content="Veltrix AI - chat, kod yozish, tarjima va kontent yaratish uchun tezkor sun'iy intellekt yordamchi. Veltrix AI bilan unumdorlikni oshiring.">
+    <meta name="keywords" content="Veltrix AI, sun'iy intellekt, AI chatbot, AI assistant, kod yozish AI">
+    <meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1">
+    <link rel="canonical" href="{{ request.build_absolute_uri }}">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="Veltrix AI">
+    <meta property="og:title" content="Veltrix AI - Sun'iy Intellekt Yordamchi">
+    <meta property="og:description" content="Veltrix AI orqali chat qiling, kod yozing va ijodiy vazifalarni tez bajaring.">
+    <meta property="og:url" content="{{ request.build_absolute_uri }}">
+    <meta property="og:image" content="{{ request.scheme }}://{{ request.get_host }}{% static 'images/logo.svg' %}">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Veltrix AI - Sun'iy Intellekt Yordamchi">
+    <meta name="twitter:description" content="Veltrix AI orqali chat, kod va kontent vazifalarini bitta platformada bajaring.">
+    <meta name="twitter:image" content="{{ request.scheme }}://{{ request.get_host }}{% static 'images/logo.svg' %}">
+    <link rel="icon" type="image/svg+xml" href="{% static 'images/logo.svg' %}">
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "WebSite",
+      "name": "Veltrix AI",
+      "url": "{{ request.scheme }}://{{ request.get_host }}/",
+      "description": "Veltrix AI - sun'iy intellekt yordamida chat, kod va kontent yaratish platformasi.",
+      "potentialAction": {
+        "@type": "SearchAction",
+        "target": "{{ request.scheme }}://{{ request.get_host }}/login/?q={search_term_string}",
+        "query-input": "required name=search_term_string"
+      }
+    }
+    </script>
+    <style>
+        body { margin: 0; font-family: Inter, Arial, sans-serif; background: #07070c; color: #fff; }
+        .wrap { max-width: 980px; margin: 0 auto; padding: 72px 20px; text-align: center; }
+        h1 { font-size: 44px; margin-bottom: 12px; }
+        p { color: #c8c8d2; font-size: 18px; line-height: 1.7; }
+        .cta { margin-top: 28px; display: flex; justify-content: center; gap: 12px; flex-wrap: wrap; }
+        a.btn { text-decoration: none; padding: 12px 18px; border-radius: 10px; font-weight: 600; }
+        .primary { background: #7c3aed; color: #fff; }
+        .secondary { border: 1px solid #3f3f46; color: #fff; }
+        .grid { margin-top: 46px; display: grid; gap: 14px; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); text-align: left; }
+        .card { background: #11111a; border: 1px solid #222236; border-radius: 12px; padding: 16px; }
+        .card h2 { font-size: 18px; margin: 0 0 8px; }
+        .card p { margin: 0; font-size: 14px; color: #b5b5c7; }
+    </style>
+</head>
+<body>
+    <main class="wrap">
+        <img src="{% static 'images/logo.svg' %}" alt="Veltrix AI Logo" width="80" height="80">
+        <h1>Veltrix AI</h1>
+        <p>Veltrix AI - kundalik ishlar, kod yozish, o'qish va ijodiy vazifalar uchun tezkor sun'iy intellekt yordamchingiz.</p>
+        <div class="cta">
+            <a class="btn primary" href="{% url 'register' %}">Boshlash</a>
+            <a class="btn secondary" href="{% url 'login' %}">Kirish</a>
+        </div>
+        <section class="grid">
+            <article class="card">
+                <h2>AI Chat</h2>
+                <p>Savollarga tez, tushunarli va amaliy javoblar.</p>
+            </article>
+            <article class="card">
+                <h2>Kod Yozish</h2>
+                <p>Dasturlash vazifalari uchun aqlli yordam va misollar.</p>
+            </article>
+            <article class="card">
+                <h2>Kontent Yaratish</h2>
+                <p>Matn, g'oya va kreativ ishlar uchun yordamchi vositalar.</p>
+            </article>
+        </section>
+    </main>
+</body>
+</html>

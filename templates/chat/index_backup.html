@@ -1,0 +1,461 @@
+﻿{% load static %}
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Veltrix AI — Ultra Pro</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{% static 'css/style.css' %}?v=15.0">
+    
+    <!-- Code Highlight and Markdown -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/atom-one-dark.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/highlight.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/marked@4.3.0/marked.min.js"></script>
+</head>
+<body>
+    <!-- Sidebar -->
+    <aside class="sidebar" id="sidebar">
+        <div class="logo-section">
+            <div class="logo-icon">T</div>
+            <span style="font-weight: 700; font-size: 1.1rem; tracking: -0.5px;">Veltrix AI</span>
+        </div>
+
+        <button class="new-chat-btn" id="newChatBtn">
+            <span>Yangi suhbat</span>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+        </button>
+
+        <div class="history-list" id="historyList">
+            {% for group_name, topics in grouped_topics.items %}
+                <div class="history-group">
+                    <p class="history-group-header">{{ group_name }}</p>
+                    {% for topic in topics %}
+                    <div class="history-item" data-id="{{ topic.id }}">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
+                        {{ topic.title }}
+                    </div>
+                    {% endfor %}
+                </div>
+            {% empty %}
+                <p style="font-size: 0.8rem; color: var(--text-dim); padding: 1rem; text-align: center;">Hali suhbatlar mavjud emas</p>
+            {% endfor %}
+        </div>
+
+        <div class="offer-badge" id="offerBadge">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 12v10H4V12M2 7h20v5H2zM12 22V7M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7zM12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z"></path></svg>
+            <span>Бесплатное предложение</span>
+        </div>
+
+        <div class="user-section">
+            <div class="user-card">
+                <div class="user-avatar-sm">{{ user.username|slice:":1"|upper }}</div>
+                <div style="flex: 1; overflow: hidden;">
+                    <p style="font-size: 0.85rem; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">{{ user.username }}</p>
+                    <p style="font-size: 0.7rem; color: var(--text-dim);">{{ user.profile.plan|default:"Free" }} Account</p>
+                </div>
+                <a href="{% url 'logout' %}" style="color: var(--text-dim);"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg></a>
+            </div>
+            <button onclick="clearHistory()" style="width: 100%; border: none; background: transparent; color: var(--accent-alt); font-size: 0.75rem; padding: 10px 10px 5px; cursor: pointer; opacity: 0.75; transition: 0.2s;" onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.75'">Tarixni tozalash</button>
+            <a href="{% url 'logout' %}" style="display: block; width: 100%; text-align: center; border: none; background: transparent; color: rgba(239, 68, 68, 0.9); font-size: 0.75rem; padding: 5px 10px 10px; cursor: pointer; text-decoration: none; transition: 0.2s;" onmouseover="this.style.color='#ef4444'; this.style.textShadow='0 0 8px rgba(239,68,68,0.4)'" onmouseout="this.style.color='rgba(239, 68, 68, 0.9)'; this.style.textShadow='none'">Hisobdan chiqish</a>
+        </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main-chat">
+        <header class="chat-header">
+            <button class="mobile-menu-btn" onclick="toggleSidebar()">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
+            </button>
+            <div style="display: flex; align-items: center; gap: 10px;">
+                <div class="status-dot"></div>
+                Llama 4 Scout — Veltrix AI
+            </div>
+            <div style="position: absolute; right: 2rem; display: flex; gap: 1rem;">
+                <button id="aboutBtn" class="btn-about">About</button>
+            </div>
+        </header>
+
+        <div class="messages-container" id="messagesContainer">
+            {% if not grouped_topics %}
+            <div style="height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; color: var(--text-muted); opacity: 0.8;">
+                <div style="width: 80px; height: 80px; background: hsla(250, 89%, 64%, 0.1); border-radius: 20px; display: flex; align-items: center; justify-content: center; margin-bottom: 2rem;">
+                    <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="1.5"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
+                </div>
+                <h2 style="font-size: 1.5rem; color: white; margin-bottom: 0.5rem;">Qanday yordam bera olaman?</h2>
+                <p style="font-size: 0.9rem; max-width: 400px; line-height: 1.6;">Istagan savolingizni bering yoki kod yozishda yordam so'rang.</p>
+            </div>
+            {% else %}
+            <div class="message-node ai-message">
+                <div class="avatar ai-avatar">AI</div>
+                <div class="message-content">Salom! 👋 Bugun nimalar bilan shug'ullanamiz? Men sizga kod yozishda, ma'lumot qidirishda yoki shunchaki suhbatlashishda yordam berishim mumkin.</div>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Floating Input -->
+        <div class="input-container">
+            <div class="input-box-wrapper">
+                <div id="imagePreviewBox" class="input-image-preview"></div>
+                <div id="plusMenu" class="plus-menu">
+                    <button class="plus-menu-item" type="button" id="createImageBtn" onclick="openImagePrompt(); togglePlusMenu(null, false);">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"></path></svg>
+                        <span style="font-weight: 500;">Create Image</span>
+                    </button>
+                    <button class="plus-menu-item" type="button" id="imageToAnimeBtn" onclick="openAnimePrompt(); togglePlusMenu(null, false);">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.828 14.828a4 4 0 0 1-5.656 0M9 10h1m4 0h1m-6 4h.01M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0z"></path></svg>
+                        <span style="font-weight: 500;">Image to Anime</span>
+                    </button>
+                    <div style="height: 1px; background: hsla(0,0%,100%,0.05); margin: 4px 8px;"></div>
+                    <button id="plusImageBtn" class="plus-menu-item" type="button" onclick="document.getElementById('imageInput').click(); togglePlusMenu(null, false);">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m21.44 11.05-9.19 9.19a6 6 0 0 1-8.49-8.49l8.57-8.57A4 4 0 1 1 18 8.84l-8.59 8.51a2 2 0 0 1-2.83-2.83l8.49-8.48"></path></svg>
+                        <span style="font-weight: 500;">Upload Image</span>
+                        <span style="margin-left: auto; opacity: 0.4; font-size: 0.65rem; font-weight: 400;">Ctrl+Shift+U</span>
+                    </button>
+                </div>
+
+                <button class="btn-action btn-plus" id="plusMenuBtn" title="Create image or attachments">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                </button>
+                
+                <input type="file" id="imageInput" accept="image/*" multiple style="display:none;">
+
+                <div id="imagePromptSection" class="image-prompt-section" style="display:none;">
+                    <input type="text" id="imagePrompt" placeholder="Describe image..." autocomplete="off">
+                    <select id="imageRatio">
+                        <option value="1:1">1:1 (Square)</option>
+                        <option value="9:16">9:16 (Portrait)</option>
+                        <option value="9:21">9:21 (Story)</option>
+                        <option value="3:4">3:4 (Classic)</option>
+                        <option value="16:9">16:9 (Landscape)</option>
+                        <option value="4:3">4:3 (Photo)</option>
+                    </select>
+                    <select id="imageCount">
+                        <option value="1">1 Image</option>
+                        <option value="2">2 Images</option>
+                        <option value="3">3 Images</option>
+                    </select>
+                    <select id="imageUpscale">
+                        <option value="1">HD</option>
+                        <option value="2">HD+</option>
+                        <option value="3">Full HD</option>
+                        <option value="4">2K</option>
+                    </select>
+                    <button type="button" id="sendImageBtn">Generate</button>
+                </div>
+
+                <div id="animePromptSection" class="image-prompt-section" style="display:none;">
+                    <input type="file" id="animeImageInput" accept="image/*" style="margin-bottom: 10px;">
+                    <select id="animeGender">
+                        <option value="Female">Female</option>
+                        <option value="Male">Male</option>
+                    </select>
+                    <select id="animeStyle">
+                        <option value="manga">Manga</option>
+                        <option value="dc_comics">DC Comics</option>
+                        <option value="claymation">Claymation</option>
+                        <option value="cyberpunk">Cyberpunk</option>
+                        <option value="pencil_anime">Pencil Anime</option>
+                        <option value="pop_art">Pop Art</option>
+                        <option value="cartoon_glamour">Cartoon Glamour</option>
+                        <option value="bw_comic">BW Comic</option>
+                        <option value="bright_realistic">Bright Realistic</option>
+                        <option value="voxel">Voxel</option>
+                        <option value="fantasy_anime">Fantasy Anime</option>
+                        <option value="abstract_painting">Abstract Painting</option>
+                        <option value="cartoon_poster">Cartoon Poster</option>
+                        <option value="cubist">Cubist</option>
+                    </select>
+                    <select id="animeRatio">
+                        <option value="auto">Auto</option>
+                        <option value="1:1">1:1</option>
+                        <option value="1:2">1:2</option>
+                        <option value="2:1">2:1</option>
+                        <option value="2:3">2:3</option>
+                        <option value="3:2">3:2</option>
+                        <option value="9:16">9:16</option>
+                        <option value="16:9">16:9</option>
+                    </select>
+                    <button type="button" id="sendAnimeBtn">Convert to Anime</button>
+                </div>
+
+                <textarea id="userInput" placeholder="Veltrix AI ga nimanidir yozing..." rows="1"></textarea>
+                
+                <button class="btn-action btn-voice-mode" id="voiceModeBtn" title="Uzluksiz ovozli suhbat (Voice Chat)">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 18v-6a9 9 0 0 1 18 0v6"></path><path d="M21 19a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3zM3 19a2 2 0 0 0 2 2h1a2 2 0 0 0 2-2v-3a2 2 0 0 0-2-2H3z"></path></svg>
+                </button>
+                
+                <button class="btn-action btn-mic" id="micBtn" title="Ovozli kiritish (Voice)">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"></path><path d="M19 10v2a7 7 0 0 1-14 0v-2"></path><line x1="12" y1="19" x2="12" y2="22"></line></svg>
+                </button>
+                
+                <button class="btn-action btn-send" id="sendBtn" title="Yuborish">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
+                </button>
+            </div>
+            
+            <p style="text-align: center; font-size: 0.7rem; color: var(--text-dim); margin-top: 12px; letter-spacing: 0.3px;">
+                Veltrix AI xato qilishi mumkin. Muhim ma'lumotlarni tekshiring.
+            </p>
+        </div>
+    </main>
+
+    <!-- About Modal -->
+    <div id="aboutModal" class="modal-overlay">
+        <div class="modal-content glass">
+            <div class="modal-header">
+                <h2>ℹ️ About</h2>
+                <button class="modal-close" id="closeModal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <p><strong>Veltrix AI</strong> — zamonaviy sun'iy intellekt asosida ishlovchi aqlli yordamchi. U foydalanuvchilarga savollarga javob berish, kod yozish, tarjima qilish, maslahat berish va turli vazifalarni tez va aniq bajarishda yordam beradi.</p>
+                <p>Veltrix AI doimiy ravishda rivojlanib boradi va foydalanuvchi tajribasini yanada qulay va samarali qilish uchun yangilanib turadi.</p>
+                
+                <h3>👨‍💻 Yaratgan jamoa</h3>
+                <ul>
+                    <li><strong>Davronbek Tolibov</strong> — Founder & Lead Architect<br>Loyiha asoschisi va bosh texnologik arxitektor. Sun'iy intellekt modellarini integratsiya qilish hamda platformaning umumiy strategiyasi uchun mas'ul.</li>
+                    <li><strong>Uchqunbek Farxodov</strong> — Co-Founder & Technical Consultant<br>Loyiha maslahatchisi va tasvirlarni shakllantirish funksiyasi uchun mas'ul mutaxassis.</li>
+                </ul>
+                
+                <h3>🚀 Maqsadimiz</h3>
+                <p>Oddiy, tez va aqlli AI yaratish orqali foydalanuvchilarning ishlarini yengillashtirish.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Pricing Modal -->
+    <div id="pricingModal" class="modal-overlay">
+        <div class="modal-content pricing-modal glass">
+            <div class="modal-header">
+                <h2>Попробуйте Plus бесплатно в течение 1 месяца</h2>
+                <button class="modal-close" id="closePricingModal">&times;</button>
+            </div>
+            
+            <div class="pricing-grid">
+                <!-- Free -->
+                <div class="pricing-card">
+                    <div class="card-header">
+                        <h3>Free</h3>
+                        <div class="price">$0 <span>USD / месяц</span></div>
+                        <p class="card-desc">Посмотрите, на что способен ИИ</p>
+                    </div>
+                    <button class="card-btn secondary" disabled>Ваш текущий план</button>
+                    <ul class="feature-list">
+                        <li><svg class="check-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"></polyline></svg> Базовая модель</li>
+                        <li><svg class="check-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"></polyline></svg> Ограниченное количество сообщений и загрузок</li>
+                        <li><svg class="check-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"></polyline></svg> Неограниченное создание изображений</li>
+                        <li><svg class="check-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"></polyline></svg> Ограниченная память</li>
+                    </ul>
+                </div>
+
+                <!-- Go -->
+                <div class="pricing-card">
+                    <div class="card-header">
+                        <h3>Go</h3>
+                        <div class="price">$5 <span>USD / месяц</span></div>
+                        <p class="card-desc">Продолжайте общение с расширенным доступом</p>
+                    </div>
+                    <button class="card-btn outline" id="goToCheckoutBtn">Перейти на Go</button>
+                    <ul class="feature-list">
+                        <li><svg class="check-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"></polyline></svg> Базовая модель</li>
+                        <li><svg class="check-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"></polyline></svg> Больше сообщений и загрузок</li>
+                        <li><svg class="check-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"></polyline></svg> Больше созданных изображений</li>
+                        <li><svg class="check-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"></polyline></svg> Более долгая память</li>
+                        <li><svg class="check-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"></polyline></svg> Расширенный голосовой режим</li>
+                    </ul>
+                    <div class="card-fine-print">
+                        Этот тарифный план может включать рекламу. <a href="#">Узнать больше</a>
+                    </div>
+                </div>
+
+                <!-- Plus -->
+                <div class="pricing-card featured">
+                    <div class="badge-featured">ОГРАНИЧЕННОЕ ВРЕМЯ</div>
+                    <div class="card-header">
+                        <h3>Plus</h3>
+                        <div class="price"><s>$20</s> $0 <span style="font-size: 0.7rem; display: block; margin-top: 4px;">USD в течение первого месяца</span></div>
+                        <p class="card-desc">Откройте все возможности</p>
+                    </div>
+                    <button class="card-btn primary" id="goToPlusCheckoutBtn">Получить бесплатное предложение</button>
+                    <ul class="feature-list">
+                        <li><svg class="check-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"></polyline></svg> Расширенные модели</li>
+                        <li><svg class="check-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"></polyline></svg> Еще больше сообщений и загрузок</li>
+                        <li><svg class="check-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"></polyline></svg> Создание большего количество изображений в более короткие сроки</li>
+                        <li><svg class="check-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"></polyline></svg> Расширенная память для чатов</li>
+                        <li><svg class="check-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"></polyline></svg> Агент для написания кода Codex</li>
+                        <li><svg class="check-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"></polyline></svg> Расширенное углубленное исследование</li>
+                        <li><svg class="check-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"></polyline></svg> Проекты и пользовательские Veltrix AI</li>
+                    </ul>
+                    <div class="card-fine-print">
+                        Действуют <a href="#">условия акции</a>. Акционная цена действительна на 1 месяц. Начиная с 13 мая 2026 г., Veltrix AI Plus продолжит работу за 20 $ в месяц. Можно отменить в любое время.
+                    </div>
+                </div>
+
+                <!-- Pro -->
+                <div class="pricing-card">
+                    <div class="card-header">
+                        <h3>Pro</h3>
+                        <p style="font-size: 0.75rem; color: var(--text-dim); margin-bottom: 2px;">От</p>
+                        <div class="price">$112 <span>USD / месяц</span></div>
+                        <p class="card-desc">Максимально повышайте свою продуктивность</p>
+                    </div>
+                    <button class="card-btn outline" id="goToProCheckoutBtn">Перейти на Pro</button>
+                    <p style="font-size: 0.85rem; font-weight: 700; margin: 1rem 0 0.5rem 0;">Все функции версии Plus, а также:</p>
+                    <ul class="feature-list">
+                        <li><svg class="check-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"></polyline></svg> Объем использования в 5 раз или в 20 раз больше по сравнению с Plus</li>
+                        <li><svg class="check-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"></polyline></svg> Модель Frontier Pro</li>
+                        <li><svg class="check-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"></polyline></svg> Максимальный доступ к Codex</li>
+                        <li><svg class="check-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"></polyline></svg> Максимально глубокое исследование</li>
+                        <li><svg class="check-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"></polyline></svg> Неограниченный основной чат</li>
+                        <li><svg class="check-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"></polyline></svg> Неограниченная и более быстрая генерация изображений</li>
+                    </ul>
+                    <div class="card-fine-print">
+                        Без ограничений с учетом защиты от злоупотреблений. <a href="#">Узнать больше</a>
+                    </div>
+        </div>
+    </div>
+
+    <!-- Link Checkout Modal (Stripe Style) -->
+    <div id="linkModal" class="modal-overlay">
+        <div class="modal-content link-modal">
+            <button class="modal-close" id="closeLinkModal">&times;</button>
+            <div class="link-head">
+                <div class="link-brand">
+                    <span class="link-logo-icon"></span>
+                    <span class="link-logo-text">link</span>
+                </div>
+                <h3>Быстрое и безопасное оформление</h3>
+                <p>Платите быстрее везде, где принимают Link.</p>
+            </div>
+
+            <div class="link-form">
+                <div class="link-auth-box">
+                    <p class="auth-title">Зарегистрироваться</p>
+                    <div class="link-input-group">
+                        <label>Эл.ад.</label>
+                        <input type="email" value="davron.120a@gmail.com">
+                    </div>
+                    <div class="link-input-group phone-group">
+                        <div class="country-select" id="countrySelectToggle">
+                            <div class="selected-country">
+                                <img src="https://cdnjs.cloudflare.com/ajax/libs/flag-icon-css/3.5.0/flags/4x3/uz.svg" alt="UZ" id="selectedFlag" width="20">
+                                <span id="selectedCode">+998</span>
+                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"></path></svg>
+                            </div>
+                            <div class="country-dropdown" id="countryDropdown">
+                                <!-- Dynamic list from script.js -->
+                            </div>
+                        </div>
+                        <div class="phone-input-wrapper">
+                            <label>Номер мобильного телефона</label>
+                            <input type="text" id="linkPhoneInput" placeholder="91 234 56 78">
+                        </div>
+                    </div>
+                </div>
+
+                <button class="btn-link-primary">Продолжить и перейти к оплате</button>
+                <button class="btn-link-secondary" id="btnLinkPayAmount">Оплатить 0,00 $</button>
+            </div>
+
+            <div class="link-footer">
+                <a href="#">Условия</a>
+                <span class="dot">&bull;</span>
+                <a href="#">Конф-сть</a>
+                <span class="dot">&bull;</span>
+                <a href="#">Настройки cookie</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Checkout Modal ($5 Go Plan) -->
+    <div id="checkoutModal" class="modal-overlay">
+        <div class="modal-content checkout-modal glass">
+            <div class="checkout-header">
+                <button class="btn-back" id="backToPricing">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m15 18-6-6 6-6"></path></svg>
+                    <span id="checkoutHeaderText">Настройте свой план</span>
+                </button>
+                <button class="modal-close" id="closeCheckoutModal">&times;</button>
+            </div>
+            
+            <div class="checkout-container">
+                <div class="checkout-left">
+                    <div id="checkoutTierSelection" class="tier-selection-container"></div>
+                    
+                    <section class="payment-section">
+                        <h4>Экспресс-оплата</h4>
+                        <button class="stripe-link-btn">
+                            Оплата с <span class="link-logo">link</span>
+                        </button>
+                        
+                        <div class="divider"><span>или оплатить картой</span></div>
+                        
+                        <div class="card-form">
+                            <div class="input-group">
+                                <label>Номер карты</label>
+                                <div class="card-input-wrapper">
+                                    <input type="text" id="cardNumber" placeholder="1234 1234 1234 1234">
+                                    <div class="card-icons">
+                                        <img src="https://upload.wikimedia.org/wikipedia/commons/5/5e/Visa_Inc._logo.svg" alt="Visa" width="24">
+                                        <img src="https://upload.wikimedia.org/wikipedia/commons/2/2a/Mastercard-logo.svg" alt="MC" width="24">
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="input-row">
+                                <div class="input-group">
+                                    <label>Окончание срока действия</label>
+                                    <input type="text" id="cardExpiry" placeholder="ММ / ГГ">
+                                </div>
+                                <div class="input-group">
+                                    <label>Код безопасности</label>
+                                    <div class="cvc-wrapper">
+                                        <input type="text" id="cardCvc" placeholder="CVC">
+                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 4H3a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h18a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2z"></path><line x1="1" y1="10" x2="23" y2="10"></line></svg>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="checkout-fine-print">
+                            Подписка продлевается ежемесячно до отмены. Будет списано 5,00 $/месяц. Вы можете <a href="#">отменить в любое время</a> в настройках. Оформляя подписку, вы соглашаетесь с нашими <a href="#">Условиями использования</a> и <a href="#">Условиями использования сервисных кредитов</a>.
+                        </div>
+                    </section>
+                </div>
+
+                <div class="checkout-right">
+                    <div class="order-summary">
+                        <h3 id="checkoutPlanName">План Go</h3>
+                        <p class="summary-subtitle">Основные функции</p>
+                        
+                        <ul class="summary-features" id="checkoutFeaturesList">
+                            <!-- Features populated by JS -->
+                        </ul>
+
+                        <div class="price-breakdown" id="checkoutPricingDetails">
+                            <!-- Pricing populated by JS -->
+                        </div>
+
+                        <button class="btn-subscribe" id="btnSubscribe">Подписаться</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    <!-- App Logic -->
+    <script src="{% static 'js/script.js' %}?v=15.0"></script>
+    <script>
+        const CSRF_TOKEN = "{{ csrf_token }}";
+        const API_CHAT = "/chat/";
+        const API_GET_MSG = "/get_topic_messages/";
+        const URL_CLEAR_HISTORY = "{% url 'clear_history' %}";
+        const USER_INITIAL = "{{ user.username.0|upper }}";
+        
+        // Mobile Toggle logic
+        function toggleSidebar() {
+            document.getElementById('sidebar').classList.toggle('open');
+        }
+    </script>
+</body>
+</html>

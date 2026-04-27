@@ -1,0 +1,86 @@
+﻿{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login Error - Veltrix AI</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap');
+        
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Inter', -apple-system, sans-serif;
+        }
+
+        body {
+            background-color: #000000;
+            color: #ffffff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+        }
+
+        .auth-wrapper {
+            width: 100%;
+            max-width: 400px;
+            padding: 2rem;
+            text-align: center;
+        }
+
+        .auth-title {
+            font-size: 1.8rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            color: #ef4444; /* red */
+        }
+
+        .auth-subtitle {
+            font-size: 1rem;
+            color: #b4b4b4;
+            margin-bottom: 2rem;
+            line-height: 1.6;
+        }
+
+        /* Submit Button */
+        .submit-btn {
+            display: inline-block;
+            width: 100%;
+            padding: 14px;
+            background-color: #10a37f;
+            color: #ffffff;
+            border: none;
+            border-radius: 6px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            text-decoration: none;
+            transition: opacity 0.2s;
+        }
+
+        .submit-btn:hover {
+            opacity: 0.9;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="auth-wrapper">
+        <h1 class="auth-title">Authentication Failed</h1>
+        <p class="auth-subtitle">
+            Google orqali tizimga kirishda xatolik yuz berdi. Bu ehtimol maxfiy kalit (Client Secret) xato yozilganidan bo'lishi mumkin. Iltimos qaytadan urinib ko'ring yoki saytdagi formadan foydalaning.
+        </p>
+
+        <a href="{% url 'login' %}" class="submit-btn" style="margin-bottom: 15px; background: #fff; color: #000;">Try Again (Qaytadan urinish)</a>
+        
+        <!-- Instruction to user on how to fix -->
+        <p style="color: #666; font-size: 0.8rem; margin-top: 2rem;">
+            *Dasturchi uchun: Django Admin (Social Apps) orqali Google "Client Secret" va "Client ID" kalitlari to'g'riligini tekshiring. Ba'zan 'I' va 'l' (el) harflari adashadi.
+        </p>
+    </div>
+
+</body>
+</html>
